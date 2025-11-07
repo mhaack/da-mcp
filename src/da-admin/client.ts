@@ -11,7 +11,6 @@ import {
   DAVersionsResponse,
   DAConfig,
   DAMediaReference,
-  DAFragmentReference,
   DAOperationResponse,
 } from './types';
 
@@ -40,13 +39,23 @@ export class DAAdminClient {
     console.log('  Method:', method);
     console.log('  Endpoint:', endpoint);
     console.log('  Full URL:', url);
-    if (options.body) {
-      console.log('  Body:', options.body);
-    }
 
     const headers = new Headers(options.headers || {});
     headers.set('Authorization', `Bearer ${this.apiToken}`);
-    headers.set('Content-Type', 'application/json');
+
+    // Only set Content-Type for JSON, not for FormData
+    const isFormData = options.body instanceof FormData;
+    if (!isFormData) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    if (options.body) {
+      if (isFormData) {
+        console.log('  Body: FormData (multipart/form-data)');
+      } else {
+        console.log('  Body:', options.body);
+      }
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -121,7 +130,7 @@ export class DAAdminClient {
     repo: string,
     path: string = ''
   ): Promise<DAListSourcesResponse> {
-    const endpoint = `/api/v1/source/${org}/${repo}${path ? `/${path}` : ''}`;
+    const endpoint = `/list/${org}/${repo}${path ? `/${path}` : ''}`;
     return this.request<DAListSourcesResponse>(endpoint);
   }
 
@@ -133,7 +142,7 @@ export class DAAdminClient {
     repo: string,
     path: string
   ): Promise<DASourceContent> {
-    const endpoint = `/api/v1/source/${org}/${repo}/${path}`;
+    const endpoint = `/source/${org}/${repo}/${path}`;
     return this.request<DASourceContent>(endpoint);
   }
 
@@ -147,10 +156,18 @@ export class DAAdminClient {
     content: string,
     contentType?: string
   ): Promise<DAOperationResponse> {
-    const endpoint = `/api/v1/source/${org}/${repo}/${path}`;
+    const endpoint = `/source/${org}/${repo}/${path}`;
+
+    // Create Blob with content
+    const blob = new Blob([content], { type: contentType || 'text/html' });
+
+    // Create FormData and append the blob
+    const formData = new FormData();
+    formData.append('data', blob);
+
     return this.request<DAOperationResponse>(endpoint, {
       method: 'POST',
-      body: JSON.stringify({ content, contentType }),
+      body: formData,
     });
   }
 
@@ -164,10 +181,18 @@ export class DAAdminClient {
     content: string,
     contentType?: string
   ): Promise<DAOperationResponse> {
-    const endpoint = `/api/v1/source/${org}/${repo}/${path}`;
+    const endpoint = `/source/${org}/${repo}/${path}`;
+
+    // Create Blob with content
+    const blob = new Blob([content], { type: contentType || 'text/html' });
+
+    // Create FormData and append the blob
+    const formData = new FormData();
+    formData.append('data', blob);
+
     return this.request<DAOperationResponse>(endpoint, {
-      method: 'PUT',
-      body: JSON.stringify({ content, contentType }),
+      method: 'POST',
+      body: formData,
     });
   }
 
@@ -179,7 +204,7 @@ export class DAAdminClient {
     repo: string,
     path: string
   ): Promise<DAOperationResponse> {
-    const endpoint = `/api/v1/source/${org}/${repo}/${path}`;
+    const endpoint = `/source/${org}/${repo}/${path}`;
     return this.request<DAOperationResponse>(endpoint, {
       method: 'DELETE',
     });
@@ -194,7 +219,7 @@ export class DAAdminClient {
     sourcePath: string,
     destinationPath: string
   ): Promise<DAOperationResponse> {
-    const endpoint = `/api/v1/copy/${org}/${repo}`;
+    const endpoint = `/copy/${org}/${repo}`;
     return this.request<DAOperationResponse>(endpoint, {
       method: 'POST',
       body: JSON.stringify({ sourcePath, destinationPath }),
@@ -210,7 +235,7 @@ export class DAAdminClient {
     sourcePath: string,
     destinationPath: string
   ): Promise<DAOperationResponse> {
-    const endpoint = `/api/v1/move/${org}/${repo}`;
+    const endpoint = `/move/${org}/${repo}`;
     return this.request<DAOperationResponse>(endpoint, {
       method: 'POST',
       body: JSON.stringify({ sourcePath, destinationPath }),
@@ -225,7 +250,7 @@ export class DAAdminClient {
     repo: string,
     path: string
   ): Promise<DAVersionsResponse> {
-    const endpoint = `/api/v1/versions/${org}/${repo}/${path}`;
+    const endpoint = `/versions/${org}/${repo}/${path}`;
     return this.request<DAVersionsResponse>(endpoint);
   }
 
@@ -237,7 +262,7 @@ export class DAAdminClient {
     repo: string,
     configPath?: string
   ): Promise<DAConfig> {
-    const endpoint = `/api/v1/config/${org}/${repo}${configPath ? `/${configPath}` : ''}`;
+    const endpoint = `/config/${org}/${repo}${configPath ? `/${configPath}` : ''}`;
     return this.request<DAConfig>(endpoint);
   }
 
@@ -250,7 +275,7 @@ export class DAAdminClient {
     config: DAConfig,
     configPath?: string
   ): Promise<DAOperationResponse> {
-    const endpoint = `/api/v1/config/${org}/${repo}${configPath ? `/${configPath}` : ''}`;
+    const endpoint = `/config/${org}/${repo}${configPath ? `/${configPath}` : ''}`;
     return this.request<DAOperationResponse>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(config),
@@ -265,19 +290,7 @@ export class DAAdminClient {
     repo: string,
     mediaPath: string
   ): Promise<DAMediaReference> {
-    const endpoint = `/api/v1/media/${org}/${repo}/${mediaPath}`;
+    const endpoint = `/media/${org}/${repo}/${mediaPath}`;
     return this.request<DAMediaReference>(endpoint);
-  }
-
-  /**
-   * Lookup fragment references
-   */
-  async lookupFragment(
-    org: string,
-    repo: string,
-    fragmentPath: string
-  ): Promise<DAFragmentReference> {
-    const endpoint = `/api/v1/fragment/${org}/${repo}/${fragmentPath}`;
-    return this.request<DAFragmentReference>(endpoint);
   }
 }

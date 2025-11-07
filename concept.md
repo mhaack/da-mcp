@@ -121,7 +121,6 @@ mcp-da-live-admin-remote/
    - `getVersions()`
    - `getConfig()`
    - `lookupMedia()`
-   - `lookupFragment()`
 
 **Example Structure**:
 ```typescript

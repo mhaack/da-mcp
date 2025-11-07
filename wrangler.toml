@@ -1,7 +1,7 @@
 name = "mcp-da-admin"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
 
 [env.development]
 name = "mcp-da-admin-dev"
@@ -16,3 +16,10 @@ DA_ADMIN_BASE_URL = "https://admin.da.live"
 
 # Secrets (set via: wrangler secret put <NAME>)
 # - DA_ADMIN_API_TOKEN (optional default token for testing)
+
+[observability]
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true

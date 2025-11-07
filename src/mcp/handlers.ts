@@ -375,33 +375,3 @@ export async function handleLookupMedia(
     };
   }
 }
-
-/**
- * Handler for da_lookup_fragment tool
- */
-export async function handleLookupFragment(
-  client: DAAdminClient,
-  args: { org: string; repo: string; fragmentPath: string }
-) {
-  try {
-    const response = await client.lookupFragment(args.org, args.repo, args.fragmentPath);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(response, null, 2),
-        },
-      ],
-    };
-  } catch (error) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: formatError(error),
-        },
-      ],
-      isError: true,
-    };
-  }
-}
