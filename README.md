@@ -1,6 +1,6 @@
 # DA Live Admin - Remote MCP Server
 
-A remote Model Context Protocol (MCP) server for Document Authoring (DA) Live Admin API, deployable on Cloudflare Workers. This server provides LLM assistants like Claude with direct access to DA repository management operations.
+A remote Model Context Protocol (MCP) server for Document Authoring (DA). This server provides LLM assistants like Claude or ChatGPT with direct access to DA management operations.
 
 ## Features
 
@@ -10,6 +10,45 @@ A remote Model Context Protocol (MCP) server for Document Authoring (DA) Live Ad
 - **Token Pass-through**: Simple authentication by passing DA API tokens through Authorization header
 - **Production Ready**: Error handling, logging, CORS support, and health checks
 - **TypeScript**: Fully typed codebase for reliability and maintainability
+
+## Architecture
+
+```
+┌─────────────────┐
+│   MCP Client    │
+│ (Claude/Cursor) │
+└────────┬────────┘
+         │ Streamable HTTP
+         │ + DA Token
+         ↓
+┌─────────────────────────┐
+│  DA MCP                 │
+│  ┌──────────────────┐   │
+│  │   MCP Server     │   │
+│  │   (12 Tools)     │   │
+│  └──────────────────┘   │
+└───────────┬─────────────┘
+            │ HTTPS + Token
+            ↓
+┌─────────────────────────┐
+│  DA Admin API           │
+│  (admin.da.live)        │
+└─────────────────────────┘
+```
+
+## Project Structure
+
+```
+src/
+├── index.ts              # Cloudflare Worker entry point
+├── mcp/
+│   ├── server.ts         # MCP server initialization
+│   ├── tools.ts          # Tool definitions (schemas)
+│   └── handlers.ts       # Tool implementation handlers
+└── da-admin/
+    ├── client.ts         # DA Admin API client
+    └── types.ts          # TypeScript types
+```
 
 ## Available Tools
 
@@ -49,15 +88,6 @@ npm install
 
 Edit `wrangler.toml` if needed to customize your deployment settings.
 
-3. **Set up secrets (optional):**
-
-If you want a fallback token for testing:
-
-```bash
-wrangler secret put DA_ADMIN_API_TOKEN
-# Enter your DA API token when prompted
-```
-
 ## Development
 
 ### Local Development
@@ -96,7 +126,16 @@ npm run deploy
 wrangler deploy --env development
 ```
 
-After deployment, note your Worker URL (e.g., `https://mcp-da-admin.your-account.workers.dev`)
+### Public URLs
+
+After deployment, your MCP server is accessible at:
+
+- **Direct MCP Endpoint:**  
+  [`https://mcp-da-admin.franklin-prod.workers.dev/mcp`](https://mcp-da-admin.franklin-prod.workers.dev/mcp)
+
+- **IMS-Authenticated via AEM API Router:**  
+  [`https://mcp.adobeaemcloud.com/adobe/mcp/da`](https://mcp.adobeaemcloud.com/adobe/mcp/da)  
+  (Supports Adobe IMS login. See the [Authentication](#authentication) section below for details.)
 
 ## Client Configuration
 
@@ -156,6 +195,9 @@ or simply:
 Authorization: YOUR_DA_ADMIN_TOKEN
 ```
 
+**Note:** If you are accessing the API through the public (authenticated) URL of the API router, IMS (Adobe Identity Management Service) login is automatically handled by the AEM API router. In this case, you do *not* need to provide a DA Admin API token in the `Authorization` header—the IMS login flow will provide authentication for you.
+
+
 ## Usage Examples
 
 Once configured, you can ask your AI assistant to perform DA operations:
@@ -193,45 +235,6 @@ Health check endpoint returning server status.
 
 MCP protocol endpoint for tool execution. Requires `Authorization` header with DA Admin API token.
 
-## Architecture
-
-```
-┌─────────────────┐
-│   MCP Client    │
-│ (Claude/Cursor) │
-└────────┬────────┘
-         │ Streamable HTTP
-         │ + DA Token
-         ↓
-┌─────────────────────────┐
-│  Cloudflare Worker      │
-│  ┌──────────────────┐   │
-│  │   MCP Server     │   │
-│  │   (12 Tools)     │   │
-│  └──────────────────┘   │
-└───────────┬─────────────┘
-            │ HTTPS + Token
-            ↓
-┌─────────────────────────┐
-│  DA Admin API           │
-│  (admin.da.live)        │
-└─────────────────────────┘
-```
-
-## Project Structure
-
-```
-src/
-├── index.ts              # Cloudflare Worker entry point
-├── mcp/
-│   ├── server.ts         # MCP server initialization
-│   ├── tools.ts          # Tool definitions (schemas)
-│   └── handlers.ts       # Tool implementation handlers
-└── da-admin/
-    ├── client.ts         # DA Admin API client
-    └── types.ts          # TypeScript types
-```
-
 ## Error Handling
 
 All tools include comprehensive error handling:
@@ -267,19 +270,18 @@ wrangler tail --env production
 
 ### "Missing DA Admin API token"
 
-**Solution**: Ensure your MCP client configuration includes the Authorization header with your DA Admin API token.
+Ensure your MCP client configuration includes the Authorization header with your DA Admin API token.
 
 ### "Request timeout"
 
-**Solution**: The default timeout is 30 seconds. Large operations may need optimization or the DA Admin API may be slow.
+The default timeout is 30 seconds. Large operations may need optimization or the DA Admin API may be slow.
 
 ### "401 Unauthorized from DA API"
 
-**Solution**: Your DA Admin token may be invalid or expired. Generate a new token and update your client configuration.
+Your DA Admin token may be invalid or expired. Generate a new token and update your client configuration.
 
 ### Tools not appearing in Claude
 
-**Solution**:
 1. Restart Claude Desktop after configuration changes
 2. Check the configuration file path is correct
 3. Verify the Worker URL is accessible
@@ -298,9 +300,7 @@ Monitor your deployed Worker:
 - [ ] OAuth 2.1 authentication flow
 - [ ] Cloudflare KV for token storage
 - [ ] Rate limiting per user
-- [ ] Advanced error recovery
 - [ ] Caching for frequently accessed resources
-- [ ] Webhook support for real-time updates
 
 ## Contributing
 
@@ -318,17 +318,8 @@ MIT License - see LICENSE file for details
 ## Resources
 
 - [MCP Documentation](https://modelcontextprotocol.io/)
+- [MCP Specification](https://spec.modelcontextprotocol.io/)
 - [Cloudflare Workers Docs](https://developers.cloudflare.com/workers/)
-- [DA Live Documentation](https://da.live/)
 - [Cloudflare MCP Guide](https://developers.cloudflare.com/agents/guides/remote-mcp-server/)
-
-## Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check existing documentation
-- Review Cloudflare Workers logs
-
----
-
-Built with ❤️ using Model Context Protocol and Cloudflare Workers
+- [DA Live Documentation](https://da.live/)
+- [MCP Inspector](https://inspector.modelcontextprotocol.io/)

@@ -9,13 +9,9 @@ name = "mcp-da-admin-dev"
 [env.production]
 name = "mcp-da-admin"
 
-# Environment variables (non-sensitive)
 [vars]
 ENVIRONMENT = "development"
 DA_ADMIN_BASE_URL = "https://admin.da.live"
-
-# Secrets (set via: wrangler secret put <NAME>)
-# - DA_ADMIN_API_TOKEN (optional default token for testing)
 
 [observability]
 [observability.logs]

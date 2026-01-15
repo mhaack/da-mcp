@@ -35,7 +35,7 @@ export class DAAdminClient {
     const url = `${this.baseUrl}${endpoint}`;
     const method = options.method || 'GET';
 
-    console.log('🌐 DA Admin API Call:');
+    console.log('DA Admin API Call:');
     console.log('  Method:', method);
     console.log('  Endpoint:', endpoint);
     console.log('  Full URL:', url);
@@ -72,7 +72,7 @@ export class DAAdminClient {
       clearTimeout(timeoutId);
 
       const duration = Date.now() - startTime;
-      console.log('⏱️  DA Admin API Response:', response.status, response.statusText, `(${duration}ms)`);
+      console.log('DA Admin API Response:', response.status, response.statusText, `(${duration}ms)`);
 
       if (!response.ok) {
         const error: DAAPIError = {
@@ -84,10 +84,10 @@ export class DAAdminClient {
           const errorData: any = await response.json();
           error.details = errorData;
           error.message = errorData.message || error.message;
-          console.log('❌ DA Admin API Error:', JSON.stringify(error, null, 2));
+          console.log('DA Admin API Error:', JSON.stringify(error, null, 2));
         } catch {
           // If response is not JSON, use statusText
-          console.log('❌ DA Admin API Error:', error.status, error.message);
+          console.log('DA Admin API Error:', error.status, error.message);
         }
 
         throw error;
@@ -99,10 +99,10 @@ export class DAAdminClient {
 
       if (contentType?.includes('application/json')) {
         result = await response.json();
-        console.log('✅ DA Admin API Result:', JSON.stringify(result, null, 2));
+        console.log('DA Admin API Result:', JSON.stringify(result, null, 2));
       } else {
         result = await response.text() as unknown as T;
-        console.log('✅ DA Admin API Result (text):', result);
+        console.log('DA Admin API Result (text):', result);
       }
 
       return result;
@@ -110,14 +110,14 @@ export class DAAdminClient {
       clearTimeout(timeoutId);
 
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('⏱️  DA Admin API Timeout after', this.timeout, 'ms');
+        console.log('DA Admin API Timeout after', this.timeout, 'ms');
         throw {
           status: 408,
           message: 'Request timeout',
         } as DAAPIError;
       }
 
-      console.log('❌ DA Admin API Request Failed:', error);
+      console.log('DA Admin API Request Failed:', error);
       throw error;
     }
   }

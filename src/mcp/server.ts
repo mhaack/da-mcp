@@ -38,9 +38,9 @@ export class MCPServer {
   async handleRequest(request: any): Promise<any> {
     const { method, params, id } = request;
 
-    console.log('🔧 MCP Server: Processing method:', method);
+    console.log('MCP Server: Processing method:', method);
     if (params) {
-      console.log('📋 MCP Server: Method params:', JSON.stringify(params, null, 2));
+      console.log('MCP Server: Method params:', JSON.stringify(params, null, 2));
     }
 
     try {
@@ -48,18 +48,18 @@ export class MCPServer {
 
       switch (method) {
         case 'tools/list':
-          console.log('📚 MCP Server: Returning list of', tools.length, 'tools');
+          console.log('MCP Server: Returning list of', tools.length, 'tools');
           result = { tools };
           break;
 
         case 'tools/call':
-          console.log('🔨 MCP Server: Executing tool:', params?.name);
+          console.log('MCP Server: Executing tool:', params?.name);
           result = await this.handleToolCall(params);
-          console.log('✅ MCP Server: Tool execution completed');
+          console.log('MCP Server: Tool execution completed');
           break;
 
         case 'initialize':
-          console.log('🚀 MCP Server: Initializing connection');
+          console.log('MCP Server: Initializing connection');
           result = {
             protocolVersion: '2024-11-05',
             capabilities: {
@@ -73,7 +73,7 @@ export class MCPServer {
           break;
 
         default:
-          console.log('❌ MCP Server: Unknown method:', method);
+          console.log('MCP Server: Unknown method:', method);
           return {
             jsonrpc: '2.0',
             id,
@@ -84,14 +84,14 @@ export class MCPServer {
           };
       }
 
-      console.log('✅ MCP Server: Request handled successfully');
+      console.log('MCP Server: Request handled successfully');
       return {
         jsonrpc: '2.0',
         id,
         result,
       };
     } catch (error) {
-      console.error('❌ MCP Server: Error handling request:', error);
+      console.error('MCP Server: Error handling request:', error);
       return {
         jsonrpc: '2.0',
         id,
