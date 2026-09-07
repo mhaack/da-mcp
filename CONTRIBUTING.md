@@ -16,7 +16,6 @@ Issues are created through issue forms (blank issues are disabled). A few fields
   | --- | --- |
   | Editor / Canvas | @svynod, @hannesolo |
   | Blocks / Rendering | @svynod, @hannesolo, @mhaack |
-  | Heli | @mhaack, @hannesolo |
   | Config / Sheets | @mhaack, @hannesolo, @anfibiacreativa |
   | Auth / Permissions | @mhaack, @hannesolo, @anfibiacreativa |
   | AI Assistant / Agent | @anfibiacreativa, @mhaack |
