@@ -4,12 +4,6 @@
 
 Fixes #
 
-## Experience Workspace (EW)
-
-- [ ] This PR's scope is Experience Workspace
-
-<!-- If checked, the `ew` label is applied and the core team is added as reviewers automatically. -->
-
 ## Test URLs
 
 - Before:
