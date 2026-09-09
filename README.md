@@ -73,7 +73,7 @@ src/
 | `da_get_version` | Get the content of a specific version of a file |
 | `da_lookup_media` | Lookup media references |
 | `da_lookup_fragment` | Lookup fragment references |
-| `da_upload_media` | Upload an image or media file |
+| `da_upload_media` | Upload a media file from base64 data or a public `sourceUrl` (e.g. a Firefly temporary asset URL) |
 | `da_preview_content` | Preview (create/update) a document |
 | `da_unpreview_content` | Remove a document's preview |
 | `da_publish_content` | Publish a document to live |
