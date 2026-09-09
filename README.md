@@ -1,12 +1,12 @@
 # da-mcp
 
-[![87% Vibe_Coded](https://img.shields.io/badge/87%25-Vibe_Coded-ff69b4?style=for-the-badge&logo=semanticrelease&logoColor=white)](https://github.com/trieloff/vibe-coded-badge-action)
+[![72% Vibe_Coded](https://img.shields.io/badge/72%25-Vibe_Coded-ff69b4?style=for-the-badge&logo=semanticrelease&logoColor=white)](https://github.com/ai-ecoverse/vibe-coded-badge-action)
 
 A remote Model Context Protocol (MCP) server for Document Authoring (DA). This server provides LLM assistants like Claude or ChatGPT with direct access to DA management operations.
 
 ## Features
 
-- **10 DA Admin Tools**: Complete set of tools for managing DA repositories
+- **17 DA Admin Tools**: Complete set of tools for managing DA repositories, including preview/publish
 - **Remote Access**: Deployable on Cloudflare Workers with global edge distribution
 - **Streamable HTTP**: Modern MCP transport protocol for remote servers
 - **Token Pass-through**: Simple authentication by passing DA API tokens through Authorization header
@@ -27,15 +27,15 @@ A remote Model Context Protocol (MCP) server for Document Authoring (DA). This s
 │  DA MCP                 │
 │  ┌──────────────────┐   │
 │  │   MCP Server     │   │
-│  │   (10 Tools)     │   │
+│  │   (17 Tools)     │   │
 │  └──────────────────┘   │
 └───────────┬─────────────┘
             │ HTTPS + Token
             ↓
-┌─────────────────────────┐
-│  DA Admin API           │
-│  (admin.da.live)        │
-└─────────────────────────┘
+┌─────────────────────────┐   ┌─────────────────────────┐
+│  DA Admin API           │   │  AEM (HLX6) Admin API   │
+│  (admin.da.live)        │   │  (api.aem.live)         │
+└─────────────────────────┘   └─────────────────────────┘
 ```
 
 ## Project Structure
@@ -44,12 +44,17 @@ A remote Model Context Protocol (MCP) server for Document Authoring (DA). This s
 src/
 ├── index.ts              # Cloudflare Worker entry point
 ├── mcp/
-│   ├── server.ts         # MCP server initialization
-│   ├── tools.ts          # Tool definitions (schemas)
+│   ├── server.ts         # McpServer factory with registerTool() + Zod schemas
 │   └── handlers.ts       # Tool implementation handlers
-└── da-admin/
-    ├── client.ts         # DA Admin API client
-    └── types.ts          # TypeScript types
+├── admin/
+│   ├── admin-client.ts   # Facade routing to legacy or HLX6 client
+│   └── detect.ts         # HLX6 migration detection (cached in KV)
+├── da-admin/
+│   ├── client.ts         # Legacy DA Admin API client (admin.da.live)
+│   └── types.ts          # Shared TypeScript types + IAdminClient interface
+└── aem-admin/
+    ├── client.ts         # HLX6 AEM Admin API client (api.aem.live)
+    └── types.ts          # HLX6-specific response types
 ```
 
 ## Available Tools
@@ -64,9 +69,15 @@ src/
 | `da_copy_content` | Copy content between locations |
 | `da_move_content` | Move content between locations |
 | `da_get_versions` | Get version history for a file |
+| `da_create_version` | Create a snapshot version of a file |
+| `da_get_version` | Get the content of a specific version of a file |
 | `da_lookup_media` | Lookup media references |
 | `da_lookup_fragment` | Lookup fragment references |
 | `da_upload_media` | Upload a media file from base64 data or a public `sourceUrl` (e.g. a Firefly temporary asset URL) |
+| `da_preview_content` | Preview (create/update) a document |
+| `da_unpreview_content` | Remove a document's preview |
+| `da_publish_content` | Publish a document to live |
+| `da_unpublish_content` | Remove a document from live (unpublish) |
 
 ## Prerequisites
 

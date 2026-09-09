@@ -10,13 +10,59 @@ import {
   handleCopyContent,
   handleMoveContent,
   handleGetVersions,
+  handleCreateVersion,
+  handleGetVersion,
   handleLookupMedia,
   handleLookupFragment,
   handleUploadMedia,
+  handlePreviewContent,
+  handleUnpreviewContent,
+  handlePublishContent,
+  handleUnpublishContent,
 } from '../../src/mcp/handlers';
 
 // Mock the DA Admin Client
 vi.mock('../../src/da-admin/client');
+
+describe('formatError backend labeling', () => {
+  let mockClient: any;
+
+  beforeEach(() => {
+    mockClient = { getSource: vi.fn() };
+  });
+
+  it('labels errors from the legacy DA Admin backend', async () => {
+    mockClient.getSource.mockRejectedValue({
+      status: 400, message: 'Bad Request', backend: 'da-admin',
+    });
+
+    const result = await handleGetSource(mockClient, { org: 'acme', repo: 'site1', path: 'docs/page.html' });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('DA Admin API Error (400): Bad Request');
+    expect(result.content[0].text).not.toContain('AEM Admin API Error');
+  });
+
+  it('labels errors from the HLX6 AEM Admin backend', async () => {
+    mockClient.getSource.mockRejectedValue({
+      status: 400, message: 'Bad Request', backend: 'aem-admin',
+    });
+
+    const result = await handleGetSource(mockClient, { org: 'acme', repo: 'site1', path: 'docs/page.html' });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('AEM Admin API Error (400): Bad Request');
+  });
+
+  it('falls back to a generic Admin API Error label when backend is unspecified', async () => {
+    mockClient.getSource.mockRejectedValue({ status: 500, message: 'Internal Server Error' });
+
+    const result = await handleGetSource(mockClient, { org: 'acme', repo: 'site1', path: 'docs/page.html' });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Admin API Error (500): Internal Server Error');
+  });
+});
 
 describe('Handler path normalization', () => {
   let mockClient: any;
@@ -31,9 +77,15 @@ describe('Handler path normalization', () => {
       copyContent: vi.fn().mockResolvedValue({ success: true }),
       moveContent: vi.fn().mockResolvedValue({ success: true }),
       getVersions: vi.fn().mockResolvedValue({ versions: [] }),
+      createVersion: vi.fn().mockResolvedValue({ success: true }),
+      getVersion: vi.fn().mockResolvedValue('version content'),
       lookupMedia: vi.fn().mockResolvedValue({ data: 'base64imagedata', mimeType: 'image/png' }),
       lookupFragment: vi.fn().mockResolvedValue({ url: '' }),
       uploadMedia: vi.fn().mockResolvedValue({ success: true }),
+      previewContent: vi.fn().mockResolvedValue({ success: true }),
+      unpreviewContent: vi.fn().mockResolvedValue({ success: true }),
+      publishContent: vi.fn().mockResolvedValue({ success: true }),
+      unpublishContent: vi.fn().mockResolvedValue({ success: true }),
     };
   });
 
@@ -142,6 +194,54 @@ describe('Handler path normalization', () => {
     });
   });
 
+  describe('handlePreviewContent', () => {
+    it('should normalize path with leading slash', async () => {
+      await handlePreviewContent(mockClient, { org: 'test', repo: 'repo', path: '/docs/page' });
+      expect(mockClient.previewContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+
+    it('should strip a .html extension, since preview URLs never include one', async () => {
+      await handlePreviewContent(mockClient, { org: 'test', repo: 'repo', path: 'docs/page.html' });
+      expect(mockClient.previewContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+  });
+
+  describe('handleUnpreviewContent', () => {
+    it('should normalize path with leading slash', async () => {
+      await handleUnpreviewContent(mockClient, { org: 'test', repo: 'repo', path: '/docs/page' });
+      expect(mockClient.unpreviewContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+
+    it('should strip a .html extension, since preview URLs never include one', async () => {
+      await handleUnpreviewContent(mockClient, { org: 'test', repo: 'repo', path: 'docs/page.html' });
+      expect(mockClient.unpreviewContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+  });
+
+  describe('handlePublishContent', () => {
+    it('should normalize path with leading slash', async () => {
+      await handlePublishContent(mockClient, { org: 'test', repo: 'repo', path: '/docs/page' });
+      expect(mockClient.publishContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+
+    it('should strip a .html extension, since live URLs never include one', async () => {
+      await handlePublishContent(mockClient, { org: 'test', repo: 'repo', path: 'docs/page.html' });
+      expect(mockClient.publishContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+  });
+
+  describe('handleUnpublishContent', () => {
+    it('should normalize path with leading slash', async () => {
+      await handleUnpublishContent(mockClient, { org: 'test', repo: 'repo', path: '/docs/page' });
+      expect(mockClient.unpublishContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+
+    it('should strip a .html extension, since live URLs never include one', async () => {
+      await handleUnpublishContent(mockClient, { org: 'test', repo: 'repo', path: 'docs/page.html' });
+      expect(mockClient.unpublishContent).toHaveBeenCalledWith('test', 'repo', 'docs/page');
+    });
+  });
+
   describe('handleCopyContent', () => {
     it('should normalize both source and destination paths with leading slashes', async () => {
       await handleCopyContent(mockClient, {
@@ -215,6 +315,46 @@ describe('Handler path normalization', () => {
     it('should add .html extension when not provided', async () => {
       await handleGetVersions(mockClient, { org: 'test', repo: 'repo', path: 'docs/page' });
       expect(mockClient.getVersions).toHaveBeenCalledWith('test', 'repo', 'docs/page.html');
+    });
+  });
+
+  describe('handleCreateVersion', () => {
+    it('should normalize path with leading slash', async () => {
+      await handleCreateVersion(mockClient, { org: 'test', repo: 'repo', path: '/docs/file.md' });
+      expect(mockClient.createVersion).toHaveBeenCalledWith('test', 'repo', 'docs/file.md', undefined);
+    });
+
+    it('should add .html extension when not provided', async () => {
+      await handleCreateVersion(mockClient, { org: 'test', repo: 'repo', path: 'docs/page' });
+      expect(mockClient.createVersion).toHaveBeenCalledWith('test', 'repo', 'docs/page.html', undefined);
+    });
+
+    it('should pass through an optional label', async () => {
+      await handleCreateVersion(mockClient, {
+        org: 'test', repo: 'repo', path: 'docs/file.md', label: 'Before redesign',
+      });
+      expect(mockClient.createVersion).toHaveBeenCalledWith('test', 'repo', 'docs/file.md', 'Before redesign');
+    });
+  });
+
+  describe('handleGetVersion', () => {
+    it('should normalize path with leading slash but leave versionId untouched', async () => {
+      await handleGetVersion(mockClient, {
+        org: 'test', repo: 'repo', path: '/docs/file.md', versionId: '/versionsource/test/abc/def.html',
+      });
+      expect(mockClient.getVersion).toHaveBeenCalledWith(
+        'test',
+        'repo',
+        'docs/file.md',
+        '/versionsource/test/abc/def.html',
+      );
+    });
+
+    it('should add .html extension to path when not provided', async () => {
+      await handleGetVersion(mockClient, {
+        org: 'test', repo: 'repo', path: 'docs/page', versionId: 'v1',
+      });
+      expect(mockClient.getVersion).toHaveBeenCalledWith('test', 'repo', 'docs/page.html', 'v1');
     });
   });
 

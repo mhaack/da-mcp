@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { normalizePath, normalizePagePath } from '../../src/utils/path';
+import {
+  normalizePath, normalizePagePath, buildEditUrl, buildAemUrls, buildDaUrl,
+} from '../../src/utils/path';
 
 describe('normalizePath', () => {
   describe('leading slash removal', () => {
@@ -155,6 +157,54 @@ describe('normalizePagePath', () => {
 
     it('should normalize and add extension in one step', () => {
       expect(normalizePagePath('  /docs/page  ')).toBe('docs/page.html');
+    });
+  });
+
+  describe('buildEditUrl', () => {
+    it('should strip the extension and build a da.live edit URL', () => {
+      expect(buildEditUrl('acme', 'site1', 'docs/page.html')).toBe('https://da.live/edit#/acme/site1/docs/page');
+    });
+
+    it('should preserve a path with no extension as-is', () => {
+      expect(buildEditUrl('acme', 'site1', 'docs/README')).toBe('https://da.live/edit#/acme/site1/docs/README');
+    });
+
+    it('should only strip the last extension for multi-dot filenames', () => {
+      expect(buildEditUrl('acme', 'site1', 'assets/file.min.js')).toBe('https://da.live/edit#/acme/site1/assets/file.min');
+    });
+
+    it('should handle a root-level file', () => {
+      expect(buildEditUrl('acme', 'site1', 'index.html')).toBe('https://da.live/edit#/acme/site1/index');
+    });
+  });
+
+  describe('buildDaUrl', () => {
+    it('should build an edit URL', () => {
+      expect(buildDaUrl('acme', 'site1', 'docs/page.html', 'edit')).toBe('https://da.live/edit#/acme/site1/docs/page');
+    });
+
+    it('should build a sheet URL', () => {
+      expect(buildDaUrl('acme', 'site1', 'data/config.json', 'sheet')).toBe('https://da.live/sheet#/acme/site1/data/config');
+    });
+
+    it('should build a canvas URL', () => {
+      expect(buildDaUrl('acme', 'site1', 'docs/page.html', 'canvas')).toBe('https://da.live/canvas#/acme/site1/docs/page');
+    });
+  });
+
+  describe('buildAemUrls', () => {
+    it('should build the AEM preview and live URLs with the extension stripped', () => {
+      expect(buildAemUrls('geometrixx', 'outdoors', 'test.html')).toEqual({
+        previewUrl: 'https://main--outdoors--geometrixx.aem.page/test',
+        liveUrl: 'https://main--outdoors--geometrixx.aem.live/test',
+      });
+    });
+
+    it('should handle a nested path', () => {
+      expect(buildAemUrls('acme', 'site1', 'docs/page.html')).toEqual({
+        previewUrl: 'https://main--site1--acme.aem.page/docs/page',
+        liveUrl: 'https://main--site1--acme.aem.live/docs/page',
+      });
     });
   });
 });

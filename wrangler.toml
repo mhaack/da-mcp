@@ -4,7 +4,11 @@ compatibility_date = "2025-11-17"
 compatibility_flags = ["nodejs_compat"]
 
 services = [
-  { binding = "daadmin", service = "da-admin-dev" }
+  { binding = "daadmin", service = "da-admin-local" }
+]
+
+kv_namespaces = [
+  { binding = "DA_MCP_HLX6_STATUS_KV", id = "7554dbf3d9204934836a1d387a431192" }
 ]
 
 [vars]
@@ -25,6 +29,9 @@ name = "da-mcp-ci"
 services = [
   { binding = "daadmin", service = "da-admin-stage" }
 ]
+kv_namespaces = [
+  { binding = "DA_MCP_HLX6_STATUS_KV", id = "7554dbf3d9204934836a1d387a431192" }
+]
 
 [env.ci.vars]
 VERSION = "@@VERSION@@-ci"
@@ -35,6 +42,9 @@ ENVIRONMENT = "ci"
 name = "da-mcp"
 services = [
   { binding = "daadmin", service = "da-admin" }
+]
+kv_namespaces = [
+  { binding = "DA_MCP_HLX6_STATUS_KV", id = "50961c168387463ca60e40d8bf625e4a" }
 ]
 
 [env.production.vars]

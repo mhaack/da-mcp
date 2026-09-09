@@ -63,6 +63,9 @@ export interface DAOperationResponse {
   success: boolean;
   message?: string;
   path?: string;
+  editUrl?: string;
+  previewUrl?: string;
+  liveUrl?: string;
 }
 
 export interface DAAdminClientOptions {
@@ -75,4 +78,59 @@ export interface DAAPIError {
   status: number;
   message: string;
   details?: any;
+  backend?: 'da-admin' | 'aem-admin';
+}
+
+export interface IAdminClient {
+  listSources(org: string, repo: string, path?: string): Promise<DAListSourcesResponse>;
+  getSource(org: string, repo: string, path: string): Promise<DASourceContent>;
+  createSource(
+    org: string,
+    repo: string,
+    path: string,
+    content: string,
+    contentType?: string,
+  ): Promise<DAOperationResponse>;
+  updateSource(
+    org: string,
+    repo: string,
+    path: string,
+    content: string,
+    contentType?: string,
+  ): Promise<DAOperationResponse>;
+  deleteSource(org: string, repo: string, path: string): Promise<DAOperationResponse>;
+  copyContent(
+    org: string,
+    repo: string,
+    sourcePath: string,
+    destinationPath: string,
+  ): Promise<DAOperationResponse>;
+  moveContent(
+    org: string,
+    repo: string,
+    sourcePath: string,
+    destinationPath: string,
+  ): Promise<DAOperationResponse>;
+  getVersions(org: string, repo: string, path: string): Promise<DAVersionsResponse>;
+  createVersion(
+    org: string,
+    repo: string,
+    path: string,
+    label?: string,
+  ): Promise<DAOperationResponse>;
+  getVersion(org: string, repo: string, path: string, versionId: string): Promise<DASourceContent>;
+  lookupMedia(org: string, repo: string, mediaPath: string): Promise<DAMediaContent>;
+  lookupFragment(org: string, repo: string, fragmentPath: string): Promise<DAMediaReference>;
+  uploadMedia(
+    org: string,
+    repo: string,
+    path: string,
+    base64Data: string,
+    mimeType: string,
+    fileName: string,
+  ): Promise<DAOperationResponse>;
+  previewContent(org: string, repo: string, path: string): Promise<DAOperationResponse>;
+  unpreviewContent(org: string, repo: string, path: string): Promise<DAOperationResponse>;
+  publishContent(org: string, repo: string, path: string): Promise<DAOperationResponse>;
+  unpublishContent(org: string, repo: string, path: string): Promise<DAOperationResponse>;
 }
